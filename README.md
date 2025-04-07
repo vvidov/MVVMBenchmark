@@ -1,5 +1,8 @@
 # MVVM Implementation Benchmark
 
+[![Build and Test](https://github.com/vvidov/MVVMBenchmark/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/vvidov/MVVMBenchmark/actions/workflows/build-and-test.yml)
+
+
 This project demonstrates three different approaches to implementing the MVVM (Model-View-ViewModel) pattern in WPF, showcasing the evolution of MVVM implementation techniques from traditional to modern approaches. Each implementation demonstrates different patterns and best practices in WPF development.
 
 ## Project Structure
