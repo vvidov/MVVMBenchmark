@@ -232,9 +232,9 @@ The benchmarks measure:
 
 Example benchmark output:
 ```
-|                    Method |      Mean |    Error |   StdDev | Ratio | RatioSD |  Gen 0 | Allocated |
-|-------------------------- |----------:|---------:|---------:|------:|--------:|-------:|----------:|
-|     OldStyle_PropertyUpdate |  850.0 ns | 12.32 ns |  9.63 ns |  1.00 |    0.00 | 0.1559 |     816 B |
+|                     Method |      Mean |    Error |   StdDev | Ratio | RatioSD |  Gen 0 | Allocated |
+|--------------------------- |----------:|---------:|---------:|------:|--------:|-------:|----------:|
+|    OldStyle_PropertyUpdate |  850.0 ns | 12.32 ns |  9.63 ns |  1.00 |    0.00 | 0.1559 |     816 B |
 | BasicModern_PropertyUpdate |  825.5 ns | 11.89 ns |  9.28 ns |  0.97 |    0.02 | 0.1450 |     760 B |
 | FullToolkit_PropertyUpdate |  890.2 ns | 13.01 ns | 10.15 ns |  1.05 |    0.02 | 0.1657 |     872 B |
 ```
