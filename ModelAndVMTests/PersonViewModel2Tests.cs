@@ -57,7 +57,8 @@ public class PersonViewModel2Tests
         };
 
         // Act
-        viewModel.Reset();
+        var resetCommand = viewModel.ResetCommand;
+        resetCommand.Execute(null);
 
         // Assert
         Assert.Equal(string.Empty, viewModel.FirstName);
@@ -78,7 +79,8 @@ public class PersonViewModel2Tests
         };
 
         // Act
-        viewModel.Save();
+        var saveCommand = viewModel.SaveCommand;
+        saveCommand.Execute(null);
 
         // Assert - We can verify the person model was updated through the Age property
         Assert.Equal(DateTime.Today.Year - 1990, viewModel.Age);
@@ -104,7 +106,7 @@ public class PersonViewModel2Tests
         var canExecuteMethod = saveCommand.GetType().GetMethod("CanExecute");
         Assert.NotNull(canExecuteMethod);
         
-        var canExecute = (bool)canExecuteMethod.Invoke(saveCommand, new object[] { null })!;
+        var canExecute = (bool)canExecuteMethod.Invoke(saveCommand, new object?[] { null })!;
         Assert.Equal(expectedCanSave, canExecute);
     }
 }
