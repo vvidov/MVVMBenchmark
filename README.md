@@ -1,13 +1,18 @@
-# MVVM Implementation Benchmark
+<div align="center">
+
+# 🎯 MVVM Implementation Benchmark
 
 [![Build and Test](https://github.com/vvidov/MVVMBenchmark/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/vvidov/MVVMBenchmark/actions/workflows/build-and-test.yml)
+[![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/download)
+[![Windows](https://img.shields.io/badge/Windows-0078D6?logo=windows)](https://www.microsoft.com/windows)
 
+</div>
 
 This project demonstrates three different approaches to implementing the MVVM (Model-View-ViewModel) pattern in WPF, showcasing the evolution of MVVM implementation techniques from traditional to modern approaches. Each implementation demonstrates different patterns and best practices in WPF development.
 
-## Project Structure
+## 🏗️ Project Structure
 
-### Core Projects
+### 📦 Core Projects
 - `Models`: Contains the shared domain model (`Person`)
   - Basic domain model with properties and business logic
   - Implements age calculation and data validation
@@ -18,7 +23,7 @@ This project demonstrates three different approaches to implementing the MVVM (M
   - Three different implementation approaches
   - Demonstrates evolution of MVVM patterns
 
-### Application Projects
+### 🖥️ Application Projects
 - `WpfAppOld`: Traditional MVVM implementation
   - Manual property change notifications
   - Classic command implementation
@@ -34,14 +39,14 @@ This project demonstrates three different approaches to implementing the MVVM (M
   - Source-generated properties and commands
   - Declarative property and command notifications
 
-### Testing Project
+### 🧪 Testing Project
 - `ModelAndVMTests`: Unit tests for models and view models
   - Comprehensive test coverage
   - Tests for all three MVVM implementations
   - Command execution testing
   - Property change notification testing
 
-### Performance Project
+### ⚡ Performance Project
 - `PerformanceBenchmarks`: Benchmarks comparing MVVM implementations
   - Uses BenchmarkDotNet for accurate measurements
   - Compares property update performance
@@ -49,7 +54,7 @@ This project demonstrates three different approaches to implementing the MVVM (M
   - Memory allocation analysis
   - Command execution benchmarks
 
-## MVVM Implementation Approaches
+## 🔄 MVVM Implementation Approaches
 
 ### 1. Traditional MVVM (PersonViewModelOldStyle)
 Classic implementation using manual property change notifications and base classes.
@@ -169,7 +174,7 @@ dotnet run --project WpfAppNewStyle
 dotnet run --project WpfAppToolkit
 ```
 
-## Performance Benchmarks
+## 📊 Performance Benchmarks
 
 To run performance benchmarks:
 
@@ -177,7 +182,7 @@ To run performance benchmarks:
 dotnet run --project PerformanceBenchmarks --configuration Release
 ```
 
-### Benchmark Results Analysis
+### 📈 Benchmark Results Analysis
 
 1. **Traditional MVVM**
    - Fastest object creation: 87-90ns
@@ -234,7 +239,7 @@ Example benchmark output:
 | FullToolkit_PropertyUpdate |  890.2 ns | 13.01 ns | 10.15 ns |  1.05 |    0.02 | 0.1657 |     872 B |
 ```
 
-## Testing Strategy
+## 🎯 Testing Strategy
 
 ### Unit Testing Approach
 ```csharp
@@ -267,7 +272,7 @@ public class PersonViewModel2Tests
 }
 ```
 
-### Test Coverage Areas
+### 🎯 Test Coverage Areas
 1. **Property Change Notifications**
    - Verify property updates trigger correct notifications
    - Test dependent property updates
@@ -283,9 +288,9 @@ public class PersonViewModel2Tests
    - Test age calculation logic
    - Validate data flow between layers
 
-## XAML Implementation
+## 🎨 XAML Implementation
 
-### View Structure
+### 🖼️ View Structure
 ```xaml
 <Grid Margin="10">
     <Grid.RowDefinitions>
@@ -302,7 +307,7 @@ public class PersonViewModel2Tests
 </Grid>
 ```
 
-### Binding Patterns
+### 🔗 Binding Patterns
 1. **Property Bindings**
    - Use UpdateSourceTrigger=PropertyChanged for immediate updates
    - Two-way binding for editable fields
@@ -318,7 +323,7 @@ public class PersonViewModel2Tests
    - Validation rule implementation
    - INotifyDataErrorInfo support
 
-## Best Practices and Recommendations
+## 💡 Best Practices and Recommendations
 
 ### 1. New Projects
 - Use the Full Toolkit approach (PersonViewModel2)
