@@ -38,6 +38,14 @@ This project demonstrates three different approaches to implementing the MVVM (M
   - Command execution testing
   - Property change notification testing
 
+### Performance Project
+- `PerformanceBenchmarks`: Benchmarks comparing MVVM implementations
+  - Uses BenchmarkDotNet for accurate measurements
+  - Compares property update performance
+  - Measures instantiation overhead
+  - Memory allocation analysis
+  - Command execution benchmarks
+
 ## MVVM Implementation Approaches
 
 ### 1. Traditional MVVM (PersonViewModelOldStyle)
@@ -156,6 +164,41 @@ dotnet run --project WpfAppNewStyle
 
 # Run the full toolkit implementation
 dotnet run --project WpfAppToolkit
+```
+
+## Performance Benchmarks
+
+To run performance benchmarks:
+
+```bash
+dotnet run --project PerformanceBenchmarks --configuration Release
+```
+
+The benchmarks measure:
+
+1. **Property Updates**
+   - Setting multiple properties
+   - Calculating dependent properties
+   - Property change notification overhead
+   - Memory allocations per update
+
+2. **Instantiation Performance**
+   - Creation time for each ViewModel type
+   - Memory allocation patterns
+   - Initialization costs
+
+3. **Memory Analysis**
+   - Allocation patterns for each implementation
+   - GC pressure comparison
+   - Memory footprint differences
+
+Example benchmark output:
+```
+|                    Method |      Mean |    Error |   StdDev | Ratio | RatioSD |  Gen 0 | Allocated |
+|-------------------------- |----------:|---------:|---------:|------:|--------:|-------:|----------:|
+|     OldStyle_PropertyUpdate |  850.0 ns | 12.32 ns |  9.63 ns |  1.00 |    0.00 | 0.1559 |     816 B |
+| BasicModern_PropertyUpdate |  825.5 ns | 11.89 ns |  9.28 ns |  0.97 |    0.02 | 0.1450 |     760 B |
+| FullToolkit_PropertyUpdate |  890.2 ns | 13.01 ns | 10.15 ns |  1.05 |    0.02 | 0.1657 |     872 B |
 ```
 
 ## Testing Strategy
