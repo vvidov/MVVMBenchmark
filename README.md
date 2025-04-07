@@ -174,6 +174,36 @@ To run performance benchmarks:
 dotnet run --project PerformanceBenchmarks --configuration Release
 ```
 
+### Benchmark Results Analysis
+
+1. **Traditional MVVM**
+   - Fastest object creation: 87-90ns
+   - Property notifications: ~94ns
+   - Property chain operations: 196-201ns
+   - Memory: 72B base, 96B creation
+   - Serves as baseline (1.0 ratio)
+
+2. **Basic Modern MVVM**
+   - Object creation: 161-166ns (1.8x slower than Traditional)
+   - Property notifications: ~93ns (on par with Traditional)
+   - Property chain: 197-206ns
+   - Memory: 72B base, 104B creation
+   - Performance ratio: 0.96-1.02x
+
+3. **Full Toolkit MVVM**
+   - Object creation: 163-165ns (similar to Basic Modern)
+   - Property notifications: ~94ns (on par with others)
+   - Property chain: 196-197ns
+   - Memory: 72B base, 120B creation
+   - Performance ratio: 0.97-1.03x
+
+### Key Findings
+
+- **Creation Performance**: Traditional MVVM significantly faster (~87ns vs ~163ns)
+- **Regular Operations**: All implementations perform similarly for notifications and property chains
+- **Memory Usage**: Base memory identical (72B), creation varies (96B-120B)
+- **Toolkit Benefits**: Minor performance overhead outweighed by improved maintainability
+
 The benchmarks measure:
 
 1. **Property Updates**

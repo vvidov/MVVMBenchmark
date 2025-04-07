@@ -7,11 +7,16 @@ namespace PerformanceBenchmarks;
 [MemoryDiagnoser]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [RankColumn]
+[SimpleJob(warmupCount: 3, iterationCount: 10)]
 public class ViewModelBenchmarks
 {
     private PersonViewModelOldStyle _oldStyleVm = null!;
     private PersonViewModel _basicModernVm = null!;
     private PersonViewModel2 _fullToolkitVm = null!;
+    
+    private const string TestFirstName = "John";
+    private const string TestLastName = "Doe";
+    private static readonly DateTime TestDate = new DateTime(1990, 1, 1);
 
     [GlobalSetup]
     public void Setup()
@@ -19,6 +24,14 @@ public class ViewModelBenchmarks
         _oldStyleVm = new PersonViewModelOldStyle();
         _basicModernVm = new PersonViewModel();
         _fullToolkitVm = new PersonViewModel2();
+
+        // Initialize with some data to enable validation scenarios
+        _oldStyleVm.FirstName = TestFirstName;
+        _oldStyleVm.LastName = TestLastName;
+        _basicModernVm.FirstName = TestFirstName;
+        _basicModernVm.LastName = TestLastName;
+        _fullToolkitVm.FirstName = TestFirstName;
+        _fullToolkitVm.LastName = TestLastName;
     }
 
     [Benchmark(Baseline = true, Description = "Traditional MVVM")]
@@ -68,4 +81,66 @@ public class ViewModelBenchmarks
     {
         return new PersonViewModel2();
     }
+
+    #region Property Chain Benchmarks
+
+    [Benchmark(Description = "Traditional MVVM - Property Chain")]
+    public void OldStyle_PropertyChain()
+    {
+        _oldStyleVm.FirstName = TestFirstName + " Updated";
+        _ = _oldStyleVm.DisplayText; // Triggers dependent property
+        _ = _oldStyleVm.Age; // Triggers age calculation
+    }
+
+    [Benchmark(Description = "Basic Modern MVVM - Property Chain")]
+    public void BasicModern_PropertyChain()
+    {
+        _basicModernVm.FirstName = TestFirstName + " Updated";
+        _ = _basicModernVm.DisplayText;
+        _ = _basicModernVm.Age;
+    }
+
+    [Benchmark(Description = "Full Toolkit MVVM - Property Chain")]
+    public void FullToolkit_PropertyChain()
+    {
+        _fullToolkitVm.FirstName = TestFirstName + " Updated";
+        _ = _fullToolkitVm.DisplayText;
+        _ = _fullToolkitVm.Age;
+    }
+
+    #endregion
+
+    #region Property Notification Benchmarks
+
+    [Benchmark(Description = "Traditional MVVM - Notifications")]
+    public void OldStyle_PropertyNotifications()
+    {
+        _oldStyleVm.FirstName = "";
+        _oldStyleVm.LastName = "";
+        _oldStyleVm.DateOfBirth = TestDate;
+        _ = _oldStyleVm.DisplayText;
+        _ = _oldStyleVm.Age;
+    }
+
+    [Benchmark(Description = "Basic Modern MVVM - Notifications")]
+    public void BasicModern_PropertyNotifications()
+    {
+        _basicModernVm.FirstName = "";
+        _basicModernVm.LastName = "";
+        _basicModernVm.DateOfBirth = TestDate;
+        _ = _basicModernVm.DisplayText;
+        _ = _basicModernVm.Age;
+    }
+
+    [Benchmark(Description = "Full Toolkit MVVM - Notifications")]
+    public void FullToolkit_PropertyNotifications()
+    {
+        _fullToolkitVm.FirstName = "";
+        _fullToolkitVm.LastName = "";
+        _fullToolkitVm.DateOfBirth = TestDate;
+        _ = _fullToolkitVm.DisplayText;
+        _ = _fullToolkitVm.Age;
+    }
+
+    #endregion
 }
