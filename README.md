@@ -44,6 +44,12 @@ This project demonstrates three different approaches to implementing the MVVM (M
   - Source-generated properties and commands
   - Declarative property and command notifications
 
+- `WinFormsAppToolkit`: Windows Forms MVVM implementation
+  - Uses same ViewModels as WPF without modifications
+  - Demonstrates platform-independent MVVM
+  - Windows Forms data binding capabilities
+  - No code-behind approach
+
 ### 🧪 Testing Project
 - `ModelAndVMTests`: Unit tests for models and view models
   - Comprehensive test coverage
@@ -274,6 +280,10 @@ public class PersonViewModel2Tests
 - Implement proper service interfaces
 - Follow SOLID principles
 - Keep ViewModels testable and maintainable
+- Design ViewModels to be platform-independent
+- Support both WPF and Windows Forms bindings
+- Avoid platform-specific code in ViewModels
+- Legacy Windows Forms apps can use modern MVVM
 
 ## 📊 Performance Results
 
