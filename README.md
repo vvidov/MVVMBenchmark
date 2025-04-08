@@ -287,16 +287,68 @@ public class PersonViewModel2Tests
 
 ## 📊 Performance Results
 
-```
-|--------------------------- |----------:|---------:|---------:|------:|--------:|-------:|----------:|
-|    OldStyle_PropertyUpdate |  850.0 ns | 12.32 ns |  9.63 ns |  1.00 |    0.00 | 0.1559 |     816 B |
-| BasicModern_PropertyUpdate |  825.5 ns | 11.89 ns |  9.28 ns |  0.97 |    0.02 | 0.1450 |     760 B |
-| FullToolkit_PropertyUpdate |  890.2 ns | 13.01 ns | 10.15 ns |  1.05 |    0.02 | 0.1657 |     872 B |
-```
+### Environment
+- BenchmarkDotNet v0.13.12
+- Windows 10 (10.0.19045.5608/22H2/2022Update)
+- AMD Ryzen 7 5700G with Radeon Graphics
+- .NET 8.0.14 (Release), X64 RyuJIT AVX2
+
+### Benchmark Results (Release Configuration)
+
+| Method                             | Mean      | Error    | StdDev   | Ratio | Gen0   | Allocated |
+|----------------------------------- |----------:|---------:|---------:|------:|-------:|----------:|
+| Basic Modern - Notifications       |  92.75 ns |  1.82 ns |  1.78 ns |  0.38 |      - |       0 B |
+| Full Toolkit - Notifications       |  92.07 ns |  1.81 ns |  1.69 ns |  0.38 |      - |       0 B |
+| Traditional - Command              |  96.26 ns |  1.94 ns |  2.45 ns |  0.40 | 0.0057 |      48 B |
+| Traditional - Create               |  99.10 ns |  2.01 ns |  4.49 ns |  0.40 | 0.0229 |     192 B |
+| Basic Modern - Command             | 109.16 ns |  2.18 ns |  3.76 ns |  0.44 | 0.0114 |      96 B |
+| Full Toolkit - Command             | 119.55 ns |  2.41 ns |  2.58 ns |  0.49 |      - |       0 B |
+| Full Toolkit - Create              | 158.77 ns |  3.23 ns |  3.59 ns |  0.65 | 0.0181 |     152 B |
+| Basic Modern - Property Chain      | 207.17 ns |  3.47 ns |  3.71 ns |  0.85 | 0.0105 |      88 B |
+| Traditional - Property Chain       | 209.92 ns |  2.12 ns |  1.88 ns |  0.86 | 0.0105 |      88 B |
+| Full Toolkit - Property Chain      | 213.61 ns |  2.61 ns |  2.31 ns |  0.87 | 0.0105 |      88 B |
+| Full Toolkit - Complete            | 235.51 ns |  2.21 ns |  1.96 ns |  0.96 | 0.0086 |      72 B |
+| Basic Modern - Complete            | 238.66 ns |  4.37 ns |  5.69 ns |  0.98 | 0.0086 |      72 B |
+| Traditional - Complete             | 244.15 ns |  4.83 ns |  5.16 ns |  1.00 | 0.0143 |     120 B |
 
 ### Key Findings
-- Traditional MVVM excels at object creation
-- All implementations have similar notification performance
-- Memory overhead differences are minimal
-- Toolkit benefits outweigh small performance costs
-- Service abstraction has negligible performance impact
+
+1. Notification Performance
+   - Modern approaches excel at property notifications (92ns)
+   - Zero allocation for notifications in Full Toolkit
+   - ~60% faster than complete operation benchmarks
+
+2. Command Execution
+   - Traditional: Fastest but allocates 48B
+   - Basic Modern: 13% slower, doubles allocation (96B)
+   - Full Toolkit: 24% slower but zero allocation
+
+3. Object Creation
+   - Traditional: Fastest (99ns) but highest allocation (192B)
+   - Modern approaches: ~60% slower but 20% less memory
+   - Consistent between Basic and Full Toolkit
+
+4. Property Chain Updates
+   - All implementations within 3% performance range
+   - Identical memory allocation (88B)
+   - Shows maturity of property notification system
+
+5. Overall Analysis
+   - Full Toolkit advantages:
+     * Zero-allocation notifications and commands
+     * Consistent performance across operations
+     * Modern features with minimal overhead
+   - Basic Modern benefits:
+     * Best balance of performance and features
+     * Reduced memory footprint
+     * Simple implementation
+   - Traditional approach:
+     * Fastest raw performance
+     * Higher but predictable memory usage
+     * Good for memory-constrained scenarios
+
+6. Recommendations
+   - New projects: Use Full Toolkit for best features/performance ratio
+   - Memory-critical: Consider Basic Modern approach
+   - Legacy systems: Traditional approach still viable
+   - Platform independence: Full Toolkit ideal for WPF/WinForms

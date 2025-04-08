@@ -1,5 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
+using Services;
+using System.Windows;
 using ViewModels;
 
 namespace PerformanceBenchmarks;
@@ -13,17 +15,23 @@ public class ViewModelBenchmarks
     private PersonViewModelOldStyle _oldStyleVm = null!;
     private PersonViewModel _basicModernVm = null!;
     private PersonViewModel2 _fullToolkitVm = null!;
+    private readonly TestMessageBoxService _messageBoxService;
     
     private const string TestFirstName = "John";
     private const string TestLastName = "Doe";
     private static readonly DateTime TestDate = new DateTime(1990, 1, 1);
 
+    public ViewModelBenchmarks()
+    {
+        _messageBoxService = new TestMessageBoxService((text, caption, button, image) => MessageBoxResult.Yes);
+    }
+
     [GlobalSetup]
     public void Setup()
     {
-        _oldStyleVm = new PersonViewModelOldStyle();
-        _basicModernVm = new PersonViewModel();
-        _fullToolkitVm = new PersonViewModel2();
+        _oldStyleVm = new PersonViewModelOldStyle(_messageBoxService);
+        _basicModernVm = new PersonViewModel(_messageBoxService);
+        _fullToolkitVm = new PersonViewModel2(_messageBoxService);
 
         // Initialize with some data to enable validation scenarios
         _oldStyleVm.FirstName = TestFirstName;
@@ -81,6 +89,37 @@ public class ViewModelBenchmarks
     {
         return new PersonViewModel2();
     }
+
+    #region Command Execution Benchmarks
+
+    [Benchmark(Description = "Traditional MVVM - Command")]
+    public void OldStyle_Command()
+    {
+        _oldStyleVm.FirstName = TestFirstName;
+        _oldStyleVm.LastName = TestLastName;
+        _oldStyleVm.SaveCommand.Execute(null);
+        _oldStyleVm.ResetCommand.Execute(null);
+    }
+
+    [Benchmark(Description = "Basic Modern MVVM - Command")]
+    public void BasicModern_Command()
+    {
+        _basicModernVm.FirstName = TestFirstName;
+        _basicModernVm.LastName = TestLastName;
+        _basicModernVm.SaveCommand.Execute(null);
+        _basicModernVm.ResetCommand.Execute(null);
+    }
+
+    [Benchmark(Description = "Full Toolkit MVVM - Command")]
+    public void FullToolkit_Command()
+    {
+        _fullToolkitVm.FirstName = TestFirstName;
+        _fullToolkitVm.LastName = TestLastName;
+        _fullToolkitVm.SaveCommand.Execute(null);
+        _fullToolkitVm.ResetCommand.Execute(null);
+    }
+
+    #endregion
 
     #region Property Chain Benchmarks
 
