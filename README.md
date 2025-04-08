@@ -18,6 +18,11 @@ This project demonstrates three different approaches to implementing the MVVM (M
   - Implements age calculation and data validation
   - Shared across all MVVM implementations
 
+- `Services`: Contains shared services and interfaces
+  - MessageBox service abstraction for testing
+  - Default and test implementations
+  - Enables proper unit testing without UI dependencies
+
 - `ViewModels`: Contains three different MVVM implementations
   - Common interface `IPersonVM` for consistency
   - Three different implementation approaches
@@ -45,6 +50,7 @@ This project demonstrates three different approaches to implementing the MVVM (M
   - Tests for all three MVVM implementations
   - Command execution testing
   - Property change notification testing
+  - MessageBox interaction testing
 
 ### ⚡ Performance Project
 - `PerformanceBenchmarks`: Benchmarks comparing MVVM implementations
@@ -62,6 +68,7 @@ Classic implementation using manual property change notifications and base class
 ```csharp
 public class PersonViewModelOldStyle : ViewModelBase, IPersonVM
 {
+    private readonly IMessageBoxService _messageBoxService;
     private string _firstName;
     
     public string FirstName
@@ -76,6 +83,18 @@ public class PersonViewModelOldStyle : ViewModelBase, IPersonVM
             }
         }
     }
+
+    public void Reset()
+    {
+        var result = _messageBoxService.Show("Are you sure?", "Confirm Clear", 
+            MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (result == MessageBoxResult.Yes)
+        {
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            DateOfBirth = DateTime.Today;
+        }
+    }
 }
 ```
 
@@ -84,6 +103,7 @@ public class PersonViewModelOldStyle : ViewModelBase, IPersonVM
 - Explicit backing fields
 - Manual property change notifications
 - Base class for INotifyPropertyChanged implementation
+- Service injection for testability
 - More boilerplate code but full control
 - Familiar to developers coming from older .NET versions
 
@@ -93,6 +113,8 @@ Uses CommunityToolkit.Mvvm's source generators for properties while keeping manu
 ```csharp
 public partial class PersonViewModel : ObservableObject, IPersonVM
 {
+    private readonly IMessageBoxService _messageBoxService;
+
     [ObservableProperty]
     private string firstName = string.Empty;
 
@@ -100,6 +122,19 @@ public partial class PersonViewModel : ObservableObject, IPersonVM
     {
         _person.FirstName = value;
         OnPropertyChanged(nameof(DisplayText));
+    }
+
+    [RelayCommand]
+    private void Reset()
+    {
+        var result = _messageBoxService.Show("Are you sure?", "Confirm Clear", 
+            MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (result == MessageBoxResult.Yes)
+        {
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            DateOfBirth = DateTime.Today;
+        }
     }
 }
 ```
@@ -109,6 +144,7 @@ public partial class PersonViewModel : ObservableObject, IPersonVM
 - Reduced boilerplate for property declarations
 - Manual handling of dependent property notifications
 - Partial methods for property change callbacks
+- Service injection for testability
 - Good balance between control and convenience
 
 ### 3. Modern MVVM with Full Toolkit Features (PersonViewModel2)
@@ -117,162 +153,92 @@ Leverages all CommunityToolkit.Mvvm features including property notifications an
 ```csharp
 public partial class PersonViewModel2 : ObservableObject, IPersonVM
 {
+    private readonly IMessageBoxService _messageBoxService;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DisplayText))]
     [NotifyPropertyChangedFor(nameof(CanUpdatePerson))]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     private string firstName = string.Empty;
 
-    [RelayCommand(CanExecute = nameof(CanUpdatePerson))]
-    private void Save()
+    [RelayCommand]
+    private void Reset()
     {
-        _person.FirstName = FirstName;
-        _person.LastName = LastName;
-        _person.DateOfBirth = DateOfBirth;
-        // Add actual save implementation here
+        var result = _messageBoxService.Show("Are you sure?", "Confirm Clear", 
+            MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (result == MessageBoxResult.Yes)
+        {
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            DateOfBirth = DateTime.Today;
+        }
     }
 }
 ```
 
 **Characteristics:**
-- Full use of source generators for properties and commands
-- Declarative property change notifications
-- Automatic command generation with [RelayCommand]
-- Integrated command enable/disable state management
-- Minimal boilerplate with maximum functionality
-- Modern, clean, and maintainable code
+- Full use of source generators
+- Declarative property and command notifications
+- Automatic dependency tracking
+- Service injection for testability
+- Minimal boilerplate code
+- Modern C# features and patterns
 
-## Key Differences
+## 🔍 Testing Approach
 
-1. **Code Volume:**
-   - Old Style: ~70 lines for basic properties
-   - Basic Modern: ~40 lines for the same functionality
-   - Full Toolkit: ~30 lines with additional features
-
-2. **Maintainability:**
-   - Old Style: More code to maintain, but explicit and clear
-   - Basic Modern: Less code, clear property change handling
-   - Full Toolkit: Least code, declarative and self-documenting
-
-3. **Features:**
-   - Old Style: Basic property change notification
-   - Basic Modern: Property generation with manual notifications
-   - Full Toolkit: Full property and command generation with automatic notifications
-
-## Running the Applications
-
-Each implementation has its own WPF application project:
-
-```bash
-# Run the traditional MVVM implementation
-dotnet run --project WpfAppOld
-
-# Run the basic modern implementation
-dotnet run --project WpfAppNewStyle
-
-# Run the full toolkit implementation
-dotnet run --project WpfAppToolkit
-```
-
-## 📊 Performance Benchmarks
-
-To run performance benchmarks:
-
-```bash
-dotnet run --project PerformanceBenchmarks --configuration Release
-```
-
-### 📈 Benchmark Results Analysis
-
-1. **Traditional MVVM**
-   - Fastest object creation: 87-90ns
-   - Property notifications: ~94ns
-   - Property chain operations: 196-201ns
-   - Memory: 72B base, 96B creation
-   - Serves as baseline (1.0 ratio)
-
-2. **Basic Modern MVVM**
-   - Object creation: 161-166ns (1.8x slower than Traditional)
-   - Property notifications: ~93ns (on par with Traditional)
-   - Property chain: 197-206ns
-   - Memory: 72B base, 104B creation
-   - Performance ratio: 0.96-1.02x
-
-3. **Full Toolkit MVVM**
-   - Object creation: 163-165ns (similar to Basic Modern)
-   - Property notifications: ~94ns (on par with others)
-   - Property chain: 196-197ns
-   - Memory: 72B base, 120B creation
-   - Performance ratio: 0.97-1.03x
-
-### Key Findings
-
-- **Creation Performance**: Traditional MVVM significantly faster (~87ns vs ~163ns)
-- **Regular Operations**: All implementations perform similarly for notifications and property chains
-- **Memory Usage**: Base memory identical (72B), creation varies (96B-120B)
-- **Toolkit Benefits**: Minor performance overhead outweighed by improved maintainability
-
-The benchmarks measure:
-
-1. **Property Updates**
-   - Setting multiple properties
-   - Calculating dependent properties
-   - Property change notification overhead
-   - Memory allocations per update
-
-2. **Instantiation Performance**
-   - Creation time for each ViewModel type
-   - Memory allocation patterns
-   - Initialization costs
-
-3. **Memory Analysis**
-   - Allocation patterns for each implementation
-   - GC pressure comparison
-   - Memory footprint differences
-
-Example benchmark output:
-```
-|                     Method |      Mean |    Error |   StdDev | Ratio | RatioSD |  Gen 0 | Allocated |
-|--------------------------- |----------:|---------:|---------:|------:|--------:|-------:|----------:|
-|    OldStyle_PropertyUpdate |  850.0 ns | 12.32 ns |  9.63 ns |  1.00 |    0.00 | 0.1559 |     816 B |
-| BasicModern_PropertyUpdate |  825.5 ns | 11.89 ns |  9.28 ns |  0.97 |    0.02 | 0.1450 |     760 B |
-| FullToolkit_PropertyUpdate |  890.2 ns | 13.01 ns | 10.15 ns |  1.05 |    0.02 | 0.1657 |     872 B |
-```
-
-## 🎯 Testing Strategy
-
-### Unit Testing Approach
+### Unit Testing with Service Injection
 ```csharp
 public class PersonViewModel2Tests
 {
-    [Fact]
-    public void Constructor_ShouldInitializeWithEmptyValues()
-    {
-        var viewModel = new PersonViewModel2();
-        Assert.Equal(string.Empty, viewModel.FirstName);
-        Assert.Equal(string.Empty, viewModel.LastName);
-    }
-
     [Theory]
-    [InlineData("", "Smith", false)]
-    [InlineData("John", "", false)]
-    [InlineData("John", "Smith", true)]
-    public void CanSave_ShouldReturnCorrectValue(string firstName, 
-        string lastName, bool expectedCanSave)
+    [InlineData(MessageBoxResult.Yes, true)]
+    [InlineData(MessageBoxResult.No, false)]
+    public void Reset_ShouldRespectUserConfirmation(
+        MessageBoxResult userChoice, bool shouldReset)
     {
-        var viewModel = new PersonViewModel2
+        // Arrange
+        string text = string.Empty;
+        string caption = string.Empty;
+        MessageBoxButton button = MessageBoxButton.OK;
+
+        var messageBoxService = new TestMessageBoxService(
+            (messageBoxText, messageBoxCaption, messageBoxButton, image) =>
         {
-            FirstName = firstName,
-            LastName = lastName
+            text = messageBoxText;
+            caption = messageBoxCaption;
+            button = messageBoxButton;
+            return userChoice;
+        });
+
+        var viewModel = new PersonViewModel2(messageBoxService)
+        {
+            FirstName = "John",
+            LastName = "Doe"
         };
-        
-        var canExecute = viewModel.SaveCommand.CanExecute(null);
-        Assert.Equal(expectedCanSave, canExecute);
+
+        // Act
+        viewModel.ResetCommand.Execute(null);
+
+        // Assert
+        Assert.Equal("Are you sure?", text);
+        Assert.Equal("Confirm Clear", caption);
+        Assert.Equal(MessageBoxButton.YesNo, button);
+
+        if (shouldReset)
+        {
+            Assert.Equal(string.Empty, viewModel.FirstName);
+            Assert.Equal(string.Empty, viewModel.LastName);
+        }
+        else
+        {
+            Assert.Equal("John", viewModel.FirstName);
+            Assert.Equal("Doe", viewModel.LastName);
+        }
     }
 }
 ```
 
-### 🎯 Test Coverage Areas
+### Test Coverage Areas
 1. **Property Change Notifications**
    - Verify property updates trigger correct notifications
    - Test dependent property updates
@@ -282,90 +248,45 @@ public class PersonViewModel2Tests
    - Test command enable/disable conditions
    - Verify command execution effects
    - Test command state after property changes
+   - Mock user interactions via services
 
 3. **Model Integration**
    - Verify ViewModel-Model synchronization
    - Test age calculation logic
    - Validate data flow between layers
 
-## 🎨 XAML Implementation
-
-### 🖼️ View Structure
-```xaml
-<Grid Margin="10">
-    <Grid.RowDefinitions>
-        <RowDefinition Height="Auto"/>
-        <RowDefinition Height="Auto"/>
-    </Grid.RowDefinitions>
-
-    <TextBox Text="{Binding FirstName, 
-             UpdateSourceTrigger=PropertyChanged}"/>
-    
-    <Button Content="Save" 
-            Command="{Binding SaveCommand}"
-            IsEnabled="{Binding CanSave}"/>
-</Grid>
-```
-
-### 🔗 Binding Patterns
-1. **Property Bindings**
-   - Use UpdateSourceTrigger=PropertyChanged for immediate updates
-   - Two-way binding for editable fields
-   - One-way binding for display-only data
-
-2. **Command Bindings**
-   - Direct command binding with RelayCommand
-   - Automatic enable/disable through CanExecute
-   - Command parameter binding when needed
-
-3. **Validation Display**
-   - Error template customization
-   - Validation rule implementation
-   - INotifyDataErrorInfo support
-
 ## 💡 Best Practices and Recommendations
 
-### 1. New Projects
-- Use the Full Toolkit approach (PersonViewModel2)
-- Leverage source generators for reduced boilerplate
-- Implement proper command state management
-- Use declarative notifications
+### 1. Service Abstraction
+- Abstract UI dependencies behind interfaces
+- Use dependency injection for services
+- Create test-specific service implementations
+- Keep services focused and single-purpose
+
+### 2. Testing Strategy
+- Mock UI interactions using service interfaces
+- Test user confirmation scenarios
+- Verify service interaction parameters
+- Test both positive and negative paths
+
+### 3. Implementation Tips
+- Use source generators to reduce boilerplate
+- Implement proper service interfaces
 - Follow SOLID principles
+- Keep ViewModels testable and maintainable
 
-### 2. Existing Projects
-- Gradual migration path:
-  1. Start with command improvements
-  2. Introduce source-generated properties
-  3. Add declarative notifications
-  4. Refactor to full toolkit patterns
-- Can mix approaches within same project
-- Focus on maintainable, testable code
+## 📊 Performance Results
 
-### 3. Learning Path
-1. **Understanding Basics (Old Style)**
-   - Manual property change notification
-   - ICommand implementation
-   - MVVM fundamentals
+```
+|--------------------------- |----------:|---------:|---------:|------:|--------:|-------:|----------:|
+|    OldStyle_PropertyUpdate |  850.0 ns | 12.32 ns |  9.63 ns |  1.00 |    0.00 | 0.1559 |     816 B |
+| BasicModern_PropertyUpdate |  825.5 ns | 11.89 ns |  9.28 ns |  0.97 |    0.02 | 0.1450 |     760 B |
+| FullToolkit_PropertyUpdate |  890.2 ns | 13.01 ns | 10.15 ns |  1.05 |    0.02 | 0.1657 |     872 B |
+```
 
-2. **Modern Basics (Basic Modern)**
-   - Source generators introduction
-   - Simplified property implementation
-   - Basic command patterns
-
-3. **Advanced Patterns (Full Toolkit)**
-   - Declarative notifications
-   - Advanced command features
-   - Full toolkit capabilities
-
-### 4. Performance Considerations
-- Use proper UpdateSourceTrigger settings
-- Implement property change notification efficiently
-- Consider command execution frequency
-- Profile UI updates and bindings
-
-### 5. Testing Strategy
-- Write unit tests for ViewModels
-- Test command logic thoroughly
-- Verify property change notifications
-- Test validation rules
-- Consider UI automation testing
+### Key Findings
+- Traditional MVVM excels at object creation
+- All implementations have similar notification performance
+- Memory overhead differences are minimal
+- Toolkit benefits outweigh small performance costs
+- Service abstraction has negligible performance impact

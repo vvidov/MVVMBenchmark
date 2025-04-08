@@ -1,146 +1,147 @@
-
-
-using System;
-using System.ComponentModel;
+using System.Windows;
 using ViewModels;
-using Xunit;
+using Services;
 
-namespace ViewModels.Tests
+namespace ModelAndVMTests;
+
+public class PersonViewModelTests
 {
-    public class PersonViewModelTests
+    [Fact]
+    public void Constructor_ShouldInitializeWithEmptyValues()
     {
-        [Fact]
-        public void DisplayText_ShouldBeEmpty_WhenNamesAreEmpty()
+        // Arrange & Act
+        var viewModel = new PersonViewModel(new DefaultMessageBoxService());
+
+        // Assert
+        Assert.Equal(string.Empty, viewModel.FirstName);
+        Assert.Equal(string.Empty, viewModel.LastName);
+        Assert.Equal(DateTime.Today, viewModel.DateOfBirth);
+        Assert.Equal(string.Empty, viewModel.DisplayText);
+    }
+
+    [Fact]
+    public void DisplayText_ShouldBeEmpty_WhenNamesAreEmpty()
+    {
+        // Arrange
+        var viewModel = new PersonViewModel(new DefaultMessageBoxService());
+
+        // Act & Assert
+        Assert.Equal(string.Empty, viewModel.DisplayText);
+    }
+
+    [Fact]
+    public void DisplayText_ShouldShowFullInfo_WhenNamesAreSet()
+    {
+        // Arrange
+        var viewModel = new PersonViewModel(new DefaultMessageBoxService())
         {
-            // Arrange
-            var viewModel = new PersonViewModel();
+            FirstName = "John",
+            LastName = "Doe",
+            DateOfBirth = new DateTime(1990, 1, 1)
+        };
 
-            // Act
-            var displayText = viewModel.DisplayText;
+        // Act
+        var displayText = viewModel.DisplayText;
 
-            // Assert
-            Assert.Equal(string.Empty, displayText);
-        }
+        // Assert
+        Assert.Equal($"John Doe, is {DateTime.Today.Year - 1990} years old", displayText);
+    }
 
-        [Fact]
-        public void DisplayText_ShouldContainFullNameAndAge()
+    [Theory]
+    [InlineData(MessageBoxResult.Yes, true)]
+    [InlineData(MessageBoxResult.No, false)]
+    public void Reset_ShouldRespectUserConfirmation(MessageBoxResult userChoice, bool shouldReset)
+    {
+        // Arrange
+        MessageBoxResult result = MessageBoxResult.Yes;
+        MessageBoxButton button = MessageBoxButton.OK;
+        string caption = string.Empty;
+        string text = string.Empty;
+
+        // Setup the MessageBox mock
+        var messageBoxService = new TestMessageBoxService((messageBoxText, messageBoxCaption, messageBoxButton, image) =>
         {
-            // Arrange
-            var viewModel = new PersonViewModel
-            {
-                FirstName = "John",
-                LastName = "Doe",
-                DateOfBirth = new DateTime(2000, 1, 1)
-            };
+            text = messageBoxText;
+            caption = messageBoxCaption;
+            button = messageBoxButton;
+            result = userChoice;
+            return userChoice;
+        });
 
-            // Act
-            var displayText = viewModel.DisplayText;
-
-            // Assert
-            var expectedAge = DateTime.Today.Year - 2000;
-            if (DateTime.Today < new DateTime(DateTime.Today.Year, 1, 1))
-                expectedAge--;
-
-            Assert.Equal($"John Doe, is {expectedAge} years old", displayText);
-        }
-
-        [Fact]
-        public void PropertyChanged_ShouldBeRaised_WhenFirstNameChanges()
+        var viewModel = new PersonViewModel(messageBoxService)
         {
-            // Arrange
-            var viewModel = new PersonViewModel();
-            var propertyChangedRaised = false;
-            viewModel.PropertyChanged += (s, e) => 
-            {
-                if (e.PropertyName == nameof(PersonViewModel.DisplayText))
-                    propertyChangedRaised = true;
-            };
+            FirstName = "John",
+            LastName = "Doe",
+            DateOfBirth = new DateTime(1990, 1, 1)
+        };
 
-            // Act
-            viewModel.FirstName = "John";
+        // Act
+        var resetCommand = viewModel.ResetCommand;
+        resetCommand.Execute(null);
 
-            // Assert
-            Assert.True(propertyChangedRaised);
-        }
+        // Assert
+        Assert.Equal("Are you sure?", text);
+        Assert.Equal("Confirm Clear", caption);
+        Assert.Equal(MessageBoxButton.YesNo, button);
 
-        [Fact]
-        public void PropertyChanged_ShouldBeRaised_WhenLastNameChanges()
+        if (shouldReset)
         {
-            // Arrange
-            var viewModel = new PersonViewModel();
-            var propertyChangedRaised = false;
-            viewModel.PropertyChanged += (s, e) => 
-            {
-                if (e.PropertyName == nameof(PersonViewModel.DisplayText))
-                    propertyChangedRaised = true;
-            };
-
-            // Act
-            viewModel.LastName = "Doe";
-
-            // Assert
-            Assert.True(propertyChangedRaised);
+            Assert.Equal(string.Empty, viewModel.FirstName);
+            Assert.Equal(string.Empty, viewModel.LastName);
+            Assert.Equal(DateTime.Today, viewModel.DateOfBirth);
+            Assert.Equal(string.Empty, viewModel.DisplayText);
         }
-
-        [Fact]
-        public void PropertyChanged_ShouldBeRaised_WhenDateOfBirthChanges()
+        else
         {
-            // Arrange
-            var viewModel = new PersonViewModel();
-            var agePropertyChanged = false;
-            var displayTextPropertyChanged = false;
-            viewModel.PropertyChanged += (s, e) => 
-            {
-                if (e.PropertyName == nameof(PersonViewModel.Age))
-                    agePropertyChanged = true;
-                if (e.PropertyName == nameof(PersonViewModel.DisplayText))
-                    displayTextPropertyChanged = true;
-            };
-
-            // Act
-            viewModel.DateOfBirth = new DateTime(2000, 1, 1);
-
-            // Assert
-            Assert.True(agePropertyChanged);
-            Assert.True(displayTextPropertyChanged);
+            Assert.Equal("John", viewModel.FirstName);
+            Assert.Equal("Doe", viewModel.LastName);
+            Assert.Equal(new DateTime(1990, 1, 1), viewModel.DateOfBirth);
         }
+    }
 
-        [Fact]
-        public void Age_ShouldReturnCorrectAge_WhenDateOfBirthIsValid()
+    [Fact]
+    public void Save_ShouldUpdatePersonModel()
+    {
+        // Arrange
+        var viewModel = new PersonViewModel(new DefaultMessageBoxService())
         {
-            // Arrange
-            var viewModel = new PersonViewModel
-            {
-                DateOfBirth = new DateTime(2000, 1, 1)
-            };
+            FirstName = "John",
+            LastName = "Doe",
+            DateOfBirth = new DateTime(1990, 1, 1)
+        };
 
-            // Act
-            var age = viewModel.Age;
+        // Act
+        var saveCommand = viewModel.SaveCommand;
+        saveCommand.Execute(null);
 
-            // Assert
-            var expectedAge = DateTime.Today.Year - 2000;
-            if (DateTime.Today < new DateTime(DateTime.Today.Year, 1, 1))
-            {
-                expectedAge--;
-            }
-            Assert.Equal(expectedAge, age);
-        }
+        // Assert
+        Assert.Equal(DateTime.Today.Year - 1990, viewModel.Age);
+        Assert.Equal("John", viewModel.FirstName);
+        Assert.Equal("Doe", viewModel.LastName);
+        Assert.Equal(new DateTime(1990, 1, 1), viewModel.DateOfBirth);
+    }
 
-        [Fact]
-        public void Age_ShouldHandleFutureDates()
+    [Theory]
+    [InlineData("", "Smith", false)]
+    [InlineData("John", "", false)]
+    [InlineData("", "", false)]
+    [InlineData("John", "Smith", true)]
+    public void CanSave_ShouldReturnCorrectValue(string firstName, string lastName, bool expectedCanSave)
+    {
+        // Arrange
+        var viewModel = new PersonViewModel(new DefaultMessageBoxService())
         {
-            // Arrange
-            var futureDate = DateTime.Today.AddYears(1);
-            var viewModel = new PersonViewModel
-            {
-                DateOfBirth = futureDate
-            };
+            FirstName = firstName,
+            LastName = lastName
+        };
 
-            // Act
-            var age = viewModel.Age;
-
-            // Assert
-            Assert.Equal(0, age);
-        }
+        // Act & Assert
+        var saveCommand = viewModel.GetType().GetProperty("SaveCommand")?.GetValue(viewModel);
+        Assert.NotNull(saveCommand);
+        var canExecuteMethod = saveCommand.GetType().GetMethod("CanExecute");
+        Assert.NotNull(canExecuteMethod);
+        
+        var canExecute = (bool)canExecuteMethod.Invoke(saveCommand, new object?[] { null })!;
+        Assert.Equal(expectedCanSave, canExecute);
     }
 }

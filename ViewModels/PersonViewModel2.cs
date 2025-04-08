@@ -1,7 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Models;
+using Services;
 using System;
+using System.Windows;
+using System.Windows.Input;
 
 namespace ViewModels;
 
@@ -26,8 +29,11 @@ public partial class PersonViewModel2 : ObservableObject, IPersonVM
     [NotifyPropertyChangedFor(nameof(Age))]
     private DateTime dateOfBirth = DateTime.Today;
 
-    public PersonViewModel2()
+    private readonly IMessageBoxService _messageBoxService;
+
+    public PersonViewModel2(IMessageBoxService? messageBoxService = null)
     {
+        _messageBoxService = messageBoxService ?? new DefaultMessageBoxService();
         _person = new Person
         {
             FirstName = string.Empty,
@@ -64,9 +70,13 @@ public partial class PersonViewModel2 : ObservableObject, IPersonVM
     [RelayCommand]
     private void Reset()
     {
-        FirstName = string.Empty;
-        LastName = string.Empty;
-        DateOfBirth = DateTime.Today;
+        var result = _messageBoxService.Show("Are you sure?", "Confirm Clear", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (result == MessageBoxResult.Yes)
+        {
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            DateOfBirth = DateTime.Today;
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanUpdatePerson))]

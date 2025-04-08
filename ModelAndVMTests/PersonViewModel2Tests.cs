@@ -1,4 +1,6 @@
+using System.Windows;
 using ViewModels;
+using Services;
 
 namespace ModelAndVMTests;
 
@@ -8,7 +10,7 @@ public class PersonViewModel2Tests
     public void Constructor_ShouldInitializeWithEmptyValues()
     {
         // Arrange & Act
-        var viewModel = new PersonViewModel2();
+        var viewModel = new PersonViewModel2(new DefaultMessageBoxService());
 
         // Assert
         Assert.Equal(string.Empty, viewModel.FirstName);
@@ -21,7 +23,7 @@ public class PersonViewModel2Tests
     public void DisplayText_ShouldBeEmpty_WhenNamesAreEmpty()
     {
         // Arrange
-        var viewModel = new PersonViewModel2();
+        var viewModel = new PersonViewModel2(new DefaultMessageBoxService());
 
         // Act & Assert
         Assert.Equal(string.Empty, viewModel.DisplayText);
@@ -31,7 +33,7 @@ public class PersonViewModel2Tests
     public void DisplayText_ShouldShowFullInfo_WhenNamesAreSet()
     {
         // Arrange
-        var viewModel = new PersonViewModel2
+        var viewModel = new PersonViewModel2(new DefaultMessageBoxService())
         {
             FirstName = "John",
             LastName = "Doe",
@@ -45,11 +47,28 @@ public class PersonViewModel2Tests
         Assert.Equal($"John Doe, is {DateTime.Today.Year - 1990} years old", displayText);
     }
 
-    [Fact]
-    public void Reset_ShouldClearAllValues()
+    [Theory]
+    [InlineData(MessageBoxResult.Yes, true)]
+    [InlineData(MessageBoxResult.No, false)]
+    public void Reset_ShouldRespectUserConfirmation(MessageBoxResult userChoice, bool shouldReset)
     {
         // Arrange
-        var viewModel = new PersonViewModel2
+        MessageBoxResult result = MessageBoxResult.Yes;
+        MessageBoxButton button = MessageBoxButton.OK;
+        string caption = string.Empty;
+        string text = string.Empty;
+
+        // Setup the MessageBox mock
+        var messageBoxService = new TestMessageBoxService((messageBoxText, messageBoxCaption, messageBoxButton, image) =>
+        {
+            text = messageBoxText;
+            caption = messageBoxCaption;
+            button = messageBoxButton;
+            result = userChoice;
+            return userChoice;
+        });
+
+        var viewModel = new PersonViewModel2(messageBoxService)
         {
             FirstName = "John",
             LastName = "Doe",
@@ -61,17 +80,30 @@ public class PersonViewModel2Tests
         resetCommand.Execute(null);
 
         // Assert
-        Assert.Equal(string.Empty, viewModel.FirstName);
-        Assert.Equal(string.Empty, viewModel.LastName);
-        Assert.Equal(DateTime.Today, viewModel.DateOfBirth);
-        Assert.Equal(string.Empty, viewModel.DisplayText);
+        Assert.Equal("Are you sure?", text);
+        Assert.Equal("Confirm Clear", caption);
+        Assert.Equal(MessageBoxButton.YesNo, button);
+
+        if (shouldReset)
+        {
+            Assert.Equal(string.Empty, viewModel.FirstName);
+            Assert.Equal(string.Empty, viewModel.LastName);
+            Assert.Equal(DateTime.Today, viewModel.DateOfBirth);
+            Assert.Equal(string.Empty, viewModel.DisplayText);
+        }
+        else
+        {
+            Assert.Equal("John", viewModel.FirstName);
+            Assert.Equal("Doe", viewModel.LastName);
+            Assert.Equal(new DateTime(1990, 1, 1), viewModel.DateOfBirth);
+        }
     }
 
     [Fact]
     public void Save_ShouldUpdatePersonModel()
     {
         // Arrange
-        var viewModel = new PersonViewModel2
+        var viewModel = new PersonViewModel2(new DefaultMessageBoxService())
         {
             FirstName = "John",
             LastName = "Doe",
@@ -82,8 +114,11 @@ public class PersonViewModel2Tests
         var saveCommand = viewModel.SaveCommand;
         saveCommand.Execute(null);
 
-        // Assert - We can verify the person model was updated through the Age property
+        // Assert
         Assert.Equal(DateTime.Today.Year - 1990, viewModel.Age);
+        Assert.Equal("John", viewModel.FirstName);
+        Assert.Equal("Doe", viewModel.LastName);
+        Assert.Equal(new DateTime(1990, 1, 1), viewModel.DateOfBirth);
     }
 
     [Theory]
@@ -94,7 +129,7 @@ public class PersonViewModel2Tests
     public void CanSave_ShouldReturnCorrectValue(string firstName, string lastName, bool expectedCanSave)
     {
         // Arrange
-        var viewModel = new PersonViewModel2
+        var viewModel = new PersonViewModel2(new DefaultMessageBoxService())
         {
             FirstName = firstName,
             LastName = lastName
