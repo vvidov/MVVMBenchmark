@@ -11,19 +11,13 @@ namespace ViewModels;
 public partial class PersonViewModel : ObservableObject, IPersonVM
 {
     private readonly Person _person;
-
-    [ObservableProperty]
-    private string firstName = string.Empty;
-
-    [ObservableProperty]
-    private string lastName = string.Empty;
-
-    [ObservableProperty]
-    private DateTime dateOfBirth = DateTime.Today;
-
     private readonly IMessageBoxService _messageBoxService;
 
-    public PersonViewModel(IMessageBoxService? messageBoxService = null)
+    public PersonViewModel() : this(null)
+    {
+    }
+
+    public PersonViewModel(IMessageBoxService? messageBoxService)
     {
         _messageBoxService = messageBoxService ?? new DefaultMessageBoxService();
         _person = new Person
@@ -34,24 +28,54 @@ public partial class PersonViewModel : ObservableObject, IPersonVM
         };
     }
 
-    partial void OnFirstNameChanged(string value)
+    public string FirstName
     {
-        _person.FirstName = value;
-        OnPropertyChanged(nameof(DisplayText));
+        get => _person.FirstName;
+        set
+        {
+            if (_person.FirstName != value)
+            {
+                _person.FirstName = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(DisplayText));
+                OnPropertyChanged(nameof(CanUpdatePerson));
+                SaveCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 
-    partial void OnLastNameChanged(string value)
+    public string LastName
     {
-        _person.LastName = value;
-        OnPropertyChanged(nameof(DisplayText));
+        get => _person.LastName;
+        set
+        {
+            if (_person.LastName != value)
+            {
+                _person.LastName = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(DisplayText));
+                OnPropertyChanged(nameof(CanUpdatePerson));
+                SaveCommand.NotifyCanExecuteChanged();
+            }
+        }
     }
 
-    partial void OnDateOfBirthChanged(DateTime value)
+    public DateTime DateOfBirth
     {
-        _person.DateOfBirth = value;
-        OnPropertyChanged(nameof(Age));
-        OnPropertyChanged(nameof(DisplayText));
+        get => _person.DateOfBirth;
+        set
+        {
+            if (_person.DateOfBirth != value)
+            {
+                _person.DateOfBirth = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(Age));
+                OnPropertyChanged(nameof(DisplayText));
+            }
+        }
     }
+
+
 
     public int Age => _person.Age;
 
@@ -78,10 +102,7 @@ public partial class PersonViewModel : ObservableObject, IPersonVM
     [RelayCommand(CanExecute = nameof(CanUpdatePerson))]
     private void Save()
     {
-        // Update and save the person
-        _person.FirstName = FirstName;
-        _person.LastName = LastName;
-        _person.DateOfBirth = DateOfBirth;
-        // Add actual save implementation here
+        // In a real application, this would save the person model to a database or service
+        // The model is already up to date since we're using its properties directly
     }
 }

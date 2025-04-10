@@ -11,27 +11,13 @@ namespace ViewModels;
 public partial class PersonViewModel2 : ObservableObject, IPersonVM
 {
     private readonly Person _person;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayText))]
-    [NotifyPropertyChangedFor(nameof(CanUpdatePerson))]
-    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
-    private string firstName = string.Empty;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayText))]
-    [NotifyPropertyChangedFor(nameof(CanUpdatePerson))]
-    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
-    private string lastName = string.Empty;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DisplayText))]
-    [NotifyPropertyChangedFor(nameof(Age))]
-    private DateTime dateOfBirth = DateTime.Today;
-
     private readonly IMessageBoxService _messageBoxService;
 
-    public PersonViewModel2(IMessageBoxService? messageBoxService = null)
+    public PersonViewModel2() : this(null)
+    {
+    }
+
+    public PersonViewModel2(IMessageBoxService? messageBoxService)
     {
         _messageBoxService = messageBoxService ?? new DefaultMessageBoxService();
         _person = new Person
@@ -40,6 +26,39 @@ public partial class PersonViewModel2 : ObservableObject, IPersonVM
             LastName = string.Empty,
             DateOfBirth = DateTime.Today
         };
+
+        // Initialize fields from model
+        firstName = _person.FirstName;
+        lastName = _person.LastName;
+        dateOfBirth = _person.DateOfBirth;
+        IsInitialized = true;
+    }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayText))]
+    [NotifyPropertyChangedFor(nameof(CanUpdatePerson))]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    private string firstName;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayText))]
+    [NotifyPropertyChangedFor(nameof(CanUpdatePerson))]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    private string lastName;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayText))]
+    [NotifyPropertyChangedFor(nameof(Age))]
+    private DateTime dateOfBirth;
+
+    partial void OnFirstNameChanging(string value)
+    {
+        // Get value from person model initially
+        if (!IsInitialized)
+        {
+            firstName = _person.FirstName;
+            IsInitialized = true;
+        }
     }
 
     partial void OnFirstNameChanged(string value)
@@ -47,15 +66,37 @@ public partial class PersonViewModel2 : ObservableObject, IPersonVM
         _person.FirstName = value;
     }
 
+    partial void OnLastNameChanging(string value)
+    {
+        // Get value from person model initially
+        if (!IsInitialized)
+        {
+            lastName = _person.LastName;
+            IsInitialized = true;
+        }
+    }
+
     partial void OnLastNameChanged(string value)
     {
         _person.LastName = value;
+    }
+
+    partial void OnDateOfBirthChanging(DateTime value)
+    {
+        // Get value from person model initially
+        if (!IsInitialized)
+        {
+            dateOfBirth = _person.DateOfBirth;
+            IsInitialized = true;
+        }
     }
 
     partial void OnDateOfBirthChanged(DateTime value)
     {
         _person.DateOfBirth = value;
     }
+
+    private bool IsInitialized { get; set; }
 
     public int Age => _person.Age;
 
@@ -82,10 +123,7 @@ public partial class PersonViewModel2 : ObservableObject, IPersonVM
     [RelayCommand(CanExecute = nameof(CanUpdatePerson))]
     private void Save()
     {
-        // Update and save the person
-        _person.FirstName = FirstName;
-        _person.LastName = LastName;
-        _person.DateOfBirth = DateOfBirth;
-        // Add actual save implementation here
+        // In a real application, this would save the person model to a database or service
+        // The model is already up to date since we're using its properties directly
     }
 }

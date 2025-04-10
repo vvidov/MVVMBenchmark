@@ -9,33 +9,32 @@ namespace ViewModels
     public class PersonViewModelOldStyle : ViewModelBase, IPersonVM
     {
         private readonly Person _person;
-        private string _firstName;
-        private string _lastName;
-        private DateTime _dateOfBirth;
-
         private readonly IMessageBoxService _messageBoxService;
 
-        public PersonViewModelOldStyle(IMessageBoxService? messageBoxService = null)
+        public PersonViewModelOldStyle() : this(null)
+        {
+        }
+
+        public PersonViewModelOldStyle(IMessageBoxService? messageBoxService)
         {
             _messageBoxService = messageBoxService ?? new DefaultMessageBoxService();
             _person = new Person
             {
                 FirstName = string.Empty,
-                LastName = string.Empty
+                LastName = string.Empty,
+                DateOfBirth = DateTime.Today
             };
-            _firstName = string.Empty;
-            _lastName = string.Empty;
-            DateOfBirth = DateTime.Today;
         }
 
         public string FirstName
         {
-            get => _firstName;
+            get => _person.FirstName;
             set
             {
-                if (SetProperty(ref _firstName, value))
+                if (_person.FirstName != value)
                 {
                     _person.FirstName = value;
+                    OnPropertyChanged();
                     OnPropertyChanged(nameof(DisplayText));
                 }
             }
@@ -43,12 +42,13 @@ namespace ViewModels
 
         public string LastName
         {
-            get => _lastName;
+            get => _person.LastName;
             set
             {
-                if (SetProperty(ref _lastName, value))
+                if (_person.LastName != value)
                 {
                     _person.LastName = value;
+                    OnPropertyChanged();
                     OnPropertyChanged(nameof(DisplayText));
                 }
             }
@@ -56,12 +56,13 @@ namespace ViewModels
 
         public DateTime DateOfBirth
         {
-            get => _dateOfBirth;
+            get => _person.DateOfBirth;
             set
             {
-                if (SetProperty(ref _dateOfBirth, value))
+                if (_person.DateOfBirth != value)
                 {
                     _person.DateOfBirth = value;
+                    OnPropertyChanged();
                     OnPropertyChanged(nameof(Age));
                     OnPropertyChanged(nameof(DisplayText));
                 }
@@ -105,11 +106,8 @@ namespace ViewModels
                 return _saveCommand ??= new RelayCommand(
                     execute: () =>
                     {
-                        // Update and save the person
-                        _person.FirstName = FirstName;
-                        _person.LastName = LastName;
-                        _person.DateOfBirth = DateOfBirth;
-                        // Add actual save implementation here
+                        // In a real application, this would save the person model to a database or service
+                        // The model is already up to date since we're using its properties directly
                     },
                     canExecute: () => CanUpdatePerson);
             }

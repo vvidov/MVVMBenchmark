@@ -33,70 +33,78 @@ public class PersonViewModelOldStyleTests
     public void DisplayText_ShouldShowFullInfo_WhenNamesAreSet()
     {
         // Arrange
+        var dateOfBirth = new DateTime(1990, 1, 1);
         var viewModel = new PersonViewModelOldStyle(new DefaultMessageBoxService())
         {
             FirstName = "John",
             LastName = "Doe",
-            DateOfBirth = new DateTime(1990, 1, 1)
+            DateOfBirth = dateOfBirth
         };
 
         // Act
         var displayText = viewModel.DisplayText;
 
         // Assert
-        Assert.Equal($"John Doe, is {DateTime.Today.Year - 1990} years old", displayText);
+        var expected = TestHelper.GetExpectedDisplayText("John", "Doe", dateOfBirth);
+        Assert.Equal(expected, displayText);
     }
 
-    [Theory]
-    [InlineData(MessageBoxResult.Yes, true)]
-    [InlineData(MessageBoxResult.No, false)]
-    public void Reset_ShouldRespectUserConfirmation(MessageBoxResult userChoice, bool shouldReset)
+    [Fact]
+    public void Reset_ShouldClearValues_WhenUserConfirms()
     {
         // Arrange
-        MessageBoxResult result = MessageBoxResult.Yes;
-        MessageBoxButton button = MessageBoxButton.OK;
-        string caption = string.Empty;
-        string text = string.Empty;
-
-        // Setup the MessageBox mock
-        var messageBoxService = new TestMessageBoxService((messageBoxText, messageBoxCaption, messageBoxButton, image) =>
+        var messageBoxParams = new MessageBoxParameters();
+        var messageBoxService = new TestMessageBoxService((text, caption, button, image) =>
         {
-            text = messageBoxText;
-            caption = messageBoxCaption;
-            button = messageBoxButton;
-            result = userChoice;
-            return userChoice;
+            messageBoxParams.Text = text;
+            messageBoxParams.Caption = caption;
+            messageBoxParams.Button = button;
+            return MessageBoxResult.Yes;
         });
 
+        var dateOfBirth = new DateTime(1990, 1, 1);
         var viewModel = new PersonViewModelOldStyle(messageBoxService)
         {
             FirstName = "John",
             LastName = "Doe",
-            DateOfBirth = new DateTime(1990, 1, 1)
+            DateOfBirth = dateOfBirth
         };
 
         // Act
-        var resetCommand = viewModel.ResetCommand;
-        resetCommand.Execute(null);
+        viewModel.ResetCommand.Execute(null);
 
         // Assert
-        Assert.Equal("Are you sure?", text);
-        Assert.Equal("Confirm Clear", caption);
-        Assert.Equal(MessageBoxButton.YesNo, button);
+        TestHelper.AssertMessageBoxParameters("Are you sure?", "Confirm Clear", MessageBoxButton.YesNo, messageBoxParams);
+        TestHelper.AssertEmptyPersonState(viewModel);
+    }
 
-        if (shouldReset)
+    [Fact]
+    public void Reset_ShouldKeepValues_WhenUserCancels()
+    {
+        // Arrange
+        var messageBoxParams = new MessageBoxParameters();
+        var messageBoxService = new TestMessageBoxService((text, caption, button, image) =>
         {
-            Assert.Equal(string.Empty, viewModel.FirstName);
-            Assert.Equal(string.Empty, viewModel.LastName);
-            Assert.Equal(DateTime.Today, viewModel.DateOfBirth);
-            Assert.Equal(string.Empty, viewModel.DisplayText);
-        }
-        else
+            messageBoxParams.Text = text;
+            messageBoxParams.Caption = caption;
+            messageBoxParams.Button = button;
+            return MessageBoxResult.No;
+        });
+
+        var dateOfBirth = new DateTime(1990, 1, 1);
+        var viewModel = new PersonViewModelOldStyle(messageBoxService)
         {
-            Assert.Equal("John", viewModel.FirstName);
-            Assert.Equal("Doe", viewModel.LastName);
-            Assert.Equal(new DateTime(1990, 1, 1), viewModel.DateOfBirth);
-        }
+            FirstName = "John",
+            LastName = "Doe",
+            DateOfBirth = dateOfBirth
+        };
+
+        // Act
+        viewModel.ResetCommand.Execute(null);
+
+        // Assert
+        TestHelper.AssertMessageBoxParameters("Are you sure?", "Confirm Clear", MessageBoxButton.YesNo, messageBoxParams);
+        TestHelper.AssertPersonState(viewModel, "John", "Doe", dateOfBirth);
     }
 
     [Fact]
@@ -135,13 +143,10 @@ public class PersonViewModelOldStyleTests
             LastName = lastName
         };
 
-        // Act & Assert
-        var saveCommand = viewModel.GetType().GetProperty("SaveCommand")?.GetValue(viewModel);
-        Assert.NotNull(saveCommand);
-        var canExecuteMethod = saveCommand.GetType().GetMethod("CanExecute");
-        Assert.NotNull(canExecuteMethod);
-        
-        var canExecute = (bool)canExecuteMethod.Invoke(saveCommand, new object?[] { null })!;
+        // Act
+        var canExecute = TestHelper.GetCommandCanExecute(viewModel.SaveCommand);
+
+        // Assert
         Assert.Equal(expectedCanSave, canExecute);
     }
 }

@@ -31,7 +31,8 @@ public partial class Form1 : Form
         btnReset.Click += (s, e) => _viewModel.ResetCommand.Execute(null);
 
         // Bind button enabled states
-        // Update save button enabled state when command can execute changes
+        // Set initial state and update when command can execute changes
+        btnSave.Enabled = _viewModel.SaveCommand.CanExecute(null);
         _viewModel.SaveCommand.CanExecuteChanged += (s, e) => btnSave.Enabled = _viewModel.SaveCommand.CanExecute(null);
     }
 }
